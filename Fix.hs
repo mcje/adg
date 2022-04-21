@@ -1,5 +1,7 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE GADTs #-}
 
@@ -18,6 +20,9 @@ type IsFinite a = (Enum a, Bounded a)
 instance (IsFinite a, Eq b) => Eq (a -> b) where 
     f == g = and $ zipWith (==) (map f is) (map g is) where 
         is = enumFromTo minBound maxBound 
+
+--instance (Only a, Eq b) => Eq (a -> b) where
+--    f == g = and $ zipWith (==) (map f only) (map g only)
 
 instance (IsFinite a, PartialOrd b) => PartialOrd (a -> b) where 
     f <= g = and $ zipWith (<=) (map f is) (map g is) where 
@@ -40,17 +45,14 @@ fix f x = if    x == fx
           else  fix f fx
           where fx = f x
 
-class Eq a => Stop a where 
+class Stop a where 
     stop :: a -> Bool
 
 -- stops the fixed point calculation early based on some inherent Stop property of a
 fix_stop :: (Stop a) => (a -> a) -> a -> a
-fix_stop f a = if    stop a || a == a'
+fix_stop f a = if    stop a
                then  a
                else  fix_stop f a'
                where a' = f a
-
-
-
 
 
